@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>VSTS Delivery Timeline View</title>
+</head>
+<style>
+    body,
+    html {
+        height: 100%;
+        margin: 0;
+    }
+    
+    .bgimg {
+        background-color: black;
+        height: 100%;
+        background-position: center;
+        background-size: cover;
+        position: relative;
+        color: white;
+        font-family: "Courier New", Courier, monospace;
+        font-size: 25px;
+    }
+    
+    .topleft {
+        position: absolute;
+        top: 0;
+        width: 100%;
+    }
+    
+    .topleft p {
+        text-align: center;
+    }
+    
+    .bottomleft {
+        position: absolute;
+        bottom: 0;
+        left: 16px;
+    }
+    
+    .middle {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+    }
+    
+    hr {
+        margin: auto;
+        width: 40%;
+    }
+</style>
+
+<body>
+
+    <div class="bgimg">
+        <div class="topleft">
+            <p>VSTS Delivery Timeline View</p>
+        </div>
+        <div class="middle">
+            <h1>Development Tooling and Engineering POD</h1>
+            <hr>
+            <h3>Next Release</h3>
+
+            <h2 id="team" style="font-size:40px"></h2>
+
+            <p id="release" style="font-size:30px"></p>
+        </div>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script>
+        // Run the script on load for the first time
+        fetchFromVsts();
+
+        // Timer to fetch the more recent data - fetch from VSTS every 5min
+        setInterval(function() {
+            fetchFromVsts();
+        }, 300000);
+
+        /**
+         * Function to fetch details from VSTS
+         */
+        function fetchFromVsts() {
+            var vstsToken = "VSTS_TOKEN";
+            var accountName = "ACCOUNT_NAME";
+            var project = "PROJECT";
+            var planID = "PLAN_ID";
+
+            var settings = {
+                "async": true,
+                "crossDomain": true,
+                "url": "https://" + accountName + ".visualstudio.com/" + project + "/_apis/work/plans/" + planID,
+                "method": "GET",
+                "headers": {
+                    "Authorization": "Basic " + vstsToken
+                }
+            }
+            $.ajax(settings).done(function(response) {
+                var i = 0;
+                var release = [];
+
+                $.each(response.properties.markers, function(key, val) {
+                    var givenTime = Date.parse(val.date);
+                    var currentTime = Date.parse(new Date());
+
+                    if (givenTime > currentTime) {
+                        var arrayKey = givenTime - currentTime;
+                        release[i] = val;
+                        val.timeDiff = arrayKey;
+                        i++;
+                    }
+                });
+                release.sort(function(a, b) {
+                    return (a.timeDiff < b.timeDiff) ? -1 : ((a.timeDiff > b.timeDiff) ? 1 : 0);
+                });
+                countDown(release);
+            });
+        }
+
+        /**
+         * Function to display Countdown as per the closest release date
+         *
+         * @param {array} list of upcoming delivery details
+         */
+        function countDown(release) {
+            document.getElementById("team").innerHTML = release[0].label;
+            document.getElementById("team").style.color = release[0].color;
+            document.getElementById("release").style.color = release[0].color;
+
+            // Set the date we're counting down to
+            var countDownDate = new Date(release[0].date).getTime();
+
+            // Update the count down every 1 second
+            var countdownfunction = setInterval(function() {
+
+                // Get todays date and time
+                var now = new Date().getTime();
+
+                // Find the distance between now an the count down date
+                var distance = countDownDate - now;
+
+                // Time calculations for days, hours, minutes and seconds
+                var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                document.getElementById("release").innerHTML = days + "d " + hours + "h " + minutes + "m " + seconds + "s ";
+                if (distance < 0) {
+                    clearInterval(countdownfunction);
+                    document.getElementById("release").innerHTML = "Release in Progress";
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+
+</html>

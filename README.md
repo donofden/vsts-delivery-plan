@@ -1,5 +1,5 @@
 # vsts-delivery-plan
-VSTS Delivery Timeline View - Dynamic Load from VSTS Plan.
+VSTS Delivery Timeline View - Dynamic Load from VSTS Plan
 
 Following need to be updated in code:
 

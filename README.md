@@ -1,3 +1,5 @@
+[![HitCount](http://hits.dwyl.io/donofden/vsts-delivery-plan.svg)](http://hits.dwyl.io/donofden/vsts-delivery-plan)
+
 # vsts-delivery-plan
 VSTS Delivery Timeline View - Dynamic Load from VSTS Plan.
 
